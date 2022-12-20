@@ -24,6 +24,14 @@ async function run() {
         const DB = client.db("Ecom");
         const productsCollection = DB.collection("products")
 
+        //# Products Get Api
+        app.get('/products', async (req, res) => {
+            const products = await productsCollection.find({}).toArray()
+            res.send(products)
+
+        })
+
+
     } finally {
     }
 }
