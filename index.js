@@ -18,7 +18,7 @@ app.use(express.json())
 
 
 app.get('/', (req, res) => {
-    res.send('Hello World!')
+    res.send('Ecom Server is running!')
 })
 
 app.listen(port, () => {
