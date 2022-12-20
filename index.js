@@ -18,7 +18,6 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7incky7.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
-
 async function run() {
     try {
         const DB = client.db("Ecom");
@@ -31,11 +30,29 @@ async function run() {
             res.send(products)
         })
 
+        //#  User Signup Function
         app.post('/signup', async (req, res) => {
             const data = req.body
             const result = await usersCollection.insertOne(data)
             res.send(result)
         })
+
+        //# JWT Access Token Create && User Login Function
+        app.get('/login', async (req, res) => {
+            const email = req.query.email
+            const password = req.query.password
+            const query = { email: email, password: password }
+            const user = await usersCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN);
+                const credential = { accessToken: token, name: user.name, email: user.email }
+                return res.send(credential)
+            }
+            res.status(403).send({ accessToken: '' })
+
+        })
+
+
 
 
     } finally {
