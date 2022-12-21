@@ -74,7 +74,7 @@ async function run() {
         })
 
         //#  Add to cart product
-        app.post('/add-cart', async (req, res) => {
+        app.post('/add-cart', verifyJWT, async (req, res) => {
             const data = req.body
             const query = { productId: data.productId }
             const getProduct = await cartCollection.findOne(query);
