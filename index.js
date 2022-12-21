@@ -18,11 +18,32 @@ app.use(express.json())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.7incky7.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+//# JWT Access Token verify
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send({ message: 'Unathorized Access !' })
+    }
+
+    const token = authHeader.split(' ')[1];
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'Forbidden Access!' })
+        }
+        req.decoded = decoded
+        next()
+    });
+}
+
+
+
+
 async function run() {
     try {
         const DB = client.db("Ecom");
         const productsCollection = DB.collection("products")
         const usersCollection = DB.collection("users")
+        const cartCollection = DB.collection("usersCart")
 
         //# Products Get Api
         app.get('/products', async (req, res) => {
@@ -52,7 +73,28 @@ async function run() {
 
         })
 
+        //#  Add to cart product
+        app.post('/add-cart', async (req, res) => {
+            const data = req.body
+            const query = { productId: data.productId }
+            const getProduct = await cartCollection.findOne(query);
+            if (getProduct) {
+                const updateDoc = {
+                    $set: {
+                        quantity: getProduct.quantity + 1,
+                        price: getProduct.price + data.price
+                    },
+                };
 
+                const result = await cartCollection.updateOne(query, updateDoc);
+                res.send(result)
+
+            } else {
+                const result = await cartCollection.insertOne(data)
+                res.send(result)
+            }
+
+        })
 
 
     } finally {
